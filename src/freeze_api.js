@@ -13,7 +13,10 @@ function updateMapObject(opSet, edit) {
 
   const oldObject = opSet.getIn(['cache', edit.obj])
   const conflicts = Object.assign({}, oldObject._conflicts)
-  const object = Object.assign(Object.create({_conflicts: conflicts}), oldObject)
+  const object = Object.assign(Object.create({
+    get(k) { return this[k] },
+    _conflicts: conflicts,
+  }), oldObject)
 
   if (edit.action === 'set') {
     object[edit.key] = edit.link ? opSet.getIn(['cache', edit.value]) : edit.value
@@ -39,7 +42,10 @@ function updateMapObject(opSet, edit) {
 function parentMapObject(opSet, ref) {
   const oldObject = opSet.getIn(['cache', ref.get('obj')])
   const conflicts = Object.assign({}, oldObject._conflicts)
-  const object = Object.assign(Object.create({_conflicts: conflicts}), oldObject)
+  const object = Object.assign(Object.create({
+    get(k) { return this[k] },
+    _conflicts: conflicts
+  }), oldObject)
   const value = opSet.getIn(['cache', ref.get('value')])
   let changed = false
 
@@ -150,7 +156,10 @@ function instantiateImmutable(opSet, objectId) {
   let obj
   if (isRoot || objType === 'makeMap') {
     const conflicts = OpSet.getObjectConflicts(opSet, objectId, this)
-    obj = Object.create({_conflicts: Object.freeze(conflicts.toJS())})
+    obj = Object.create({
+      get(k) { return this[k] },
+      _conflicts: Object.freeze(conflicts.toJS())
+    })
 
     for (let field of OpSet.getObjectFields(opSet, objectId)) {
       obj[field] = OpSet.getObjectField(opSet, objectId, field, this)
@@ -200,7 +209,10 @@ function applyChanges(root, changes, incremental) {
     opSet = updateCache(opSet, diffs)
     newRoot = opSet.getIn(['cache', OpSet.ROOT_ID])
     if (newRoot === root) {
-      newRoot = Object.assign(Object.create({_conflicts: root._conflicts}), root)
+      newRoot = Object.assign(Object.create({
+        get(k) { return this[k] },
+        _conflicts: root._conflicts
+      }), root)
     }
   } else {
     [opSet, newRoot] = materialize(opSet)
